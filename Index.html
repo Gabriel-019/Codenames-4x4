@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Tabuleiro Codenames</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #tabuleiro {
+            display: grid;
+            grid-template-columns: repeat(4, 150px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .carta {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            font-weight: bold;
+            padding: 10px;
+            color: black;
+            font-size: 16px;
+            word-wrap: break-word;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #ffffff;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="btnGerar">Gerar Tabuleiro</button>
+    <div id="tabuleiro"></div>
+
+    <script>
+        const palavras = [
+            "Lua", "Mar", "Sol", "Chave", "Tempo", "Olho", "Pato", "Fogo",
+            "Caixa", "Bola", "Ponte", "Anjo", "Pão", "Gelo", "Raiz", "Vento",
+            "Porta", "Céu", "Sino", "Filme", "Neve", "Selva", "Fada", "Chuva",
+            "Viagem", "Garfo", "Limão", "Relógio", "Água", "Pedra", "Festa", "Cara"
+        ];
+
+        function gerarTabuleiro() {
+            const tabuleiroDiv = document.getElementById("tabuleiro");
+            tabuleiroDiv.innerHTML = "";
+
+            // Embaralhar as palavras
+            let selecionadas = [...palavras]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 16);
+
+            // Criar as cartas
+            selecionadas.forEach(palavra => {
+                const carta = document.createElement("div");
+                carta.className = "carta";
+                carta.textContent = palavra;
+                tabuleiroDiv.appendChild(carta);
+            });
+        }
+
+        document.getElementById("btnGerar").addEventListener("click", function () {
+            const tabuleiroDiv = document.getElementById("tabuleiro");
+
+            if (tabuleiroDiv.innerHTML.trim() !== "") {
+                // Se já houver um tabuleiro, pedir confirmação
+                if (confirm("Gerar um novo tabuleiro? Isso substituirá o atual.")) {
+                    gerarTabuleiro();
+                }
+            } else {
+                // Se não houver um tabuleiro ainda, gera diretamente
+                gerarTabuleiro();
+            }
+        });
+    </script>
+
+</body>
+</html>
