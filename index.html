@@ -1,98 +1,166 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Tabuleiro Codenames</title>
-    <style>
-        body {
-            background-color: black;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        #tabuleiro {
-            display: grid;
-            grid-template-columns: repeat(4, 150px);
-            grid-template-rows: repeat(4, 80px);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .carta {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-            border-radius: 8px;
-            font-weight: bold;
-            padding: 10px;
-            color: black;
-            font-size: 16px;
-            word-wrap: break-word;
-        }
-        button {
-            padding: 12px 25px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #ffffff;
-            color: black;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gerador de Tabuleiro 4x4</title>
+<style>
+  :root{
+    --bg:#000;
+    --card-size: min(14vw, 72px);
+    --gap: min(2.5vw, 10px);
+  }
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:#fff;
+    font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  .wrap{
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    padding:24px;
+    box-sizing:border-box;
+  }
+
+  /* botão central */
+  #btnGerar{
+    background:#ffffff;
+    color:#000;
+    border:0;
+    padding:14px 22px;
+    border-radius:12px;
+    font-weight:700;
+    font-size:18px;
+    cursor:pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  #btnGerar:active{ transform:translateY(1px) scale(.998); }
+  .hint{
+    margin-top:10px;
+    color:#bbb;
+    font-size:13px;
+  }
+
+  /* área do tabuleiro */
+  #tabuleiro {
+    margin-top:22px;
+    display:grid;
+    grid-template-columns: repeat(4, var(--card-size));
+    grid-auto-rows: var(--card-size);
+    gap: var(--gap);
+    align-items:center;
+    justify-content:center;
+    place-items:center;
+    transition:opacity .18s ease, transform .18s ease;
+    opacity:0;
+    transform: translateY(6px);
+    will-change:opacity, transform;
+  }
+
+  /* cada carta é apenas o emoji, centralizado */
+  .carta{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: calc(var(--card-size) * 0.65);
+    width:100%;
+    height:100%;
+    border-radius:10px;
+    background: transparent; /* fundo transparente para deixar o emoji visível no preto */
+    user-select:none;
+    -webkit-user-select:none;
+  }
+
+  /* quando aparecer, visível */
+  #tabuleiro.show{
+    opacity:1;
+    transform:none;
+  }
+
+  /* responsividade: diminuir tamanhos em telas pequenas */
+  @media (max-width:420px){
+    :root { --card-size: min(18vw, 64px); --gap:8px; }
+    #btnGerar{ font-size:16px; padding:12px 18px; }
+  }
+</style>
 </head>
 <body>
-
+  <div class="wrap">
     <button id="btnGerar">Gerar Tabuleiro</button>
-    <div id="tabuleiro"></div>
+    <div class="hint">🟦 6 • 🟥 5 • ⬜ 4 • ⬛ 1</div>
 
-    <script>
-        const palavras = [
-            "Lua", "Mar", "Sol", "Chave", "Tempo", "Olho", "Pato", "Fogo",
-            "Caixa", "Bola", "Ponte", "Anjo", "Pão", "Gelo", "Raiz", "Vento",
-            "Porta", "Céu", "Sino", "Filme", "Neve", "Selva", "Fada", "Chuva",
-            "Viagem", "Garfo", "Limão", "Relógio", "Água", "Pedra", "Festa", "Cara"
-        ];
+    <div id="tabuleiro" aria-live="polite" role="grid" aria-label="Tabuleiro 4 por 4"></div>
+  </div>
 
-        function gerarTabuleiro() {
-            const tabuleiroDiv = document.getElementById("tabuleiro");
-            tabuleiroDiv.innerHTML = "";
+<script>
+  // Emojis e quantidades
+  const AZUL = "🟦";
+  const VERMELHA = "🟥";
+  const BRANCA = "⬜";
+  const PRETA = "⬛";
 
-            // Embaralhar as palavras
-            let selecionadas = [...palavras]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 16);
+  function criarBaralho(){
+    return [
+      ...Array(6).fill(AZUL),
+      ...Array(5).fill(VERMELHA),
+      ...Array(4).fill(BRANCA),
+      ...Array(1).fill(PRETA)
+    ];
+  }
 
-            // Criar as cartas
-            selecionadas.forEach(palavra => {
-                const carta = document.createElement("div");
-                carta.className = "carta";
-                carta.textContent = palavra;
-                tabuleiroDiv.appendChild(carta);
-            });
-        }
+  // Fisher-Yates shuffle (correto)
+  function embaralhar(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
-        document.getElementById("btnGerar").addEventListener("click", function () {
-            const tabuleiroDiv = document.getElementById("tabuleiro");
+  // Renderiza grid 4x4 dos emojis
+  function renderizarGrid(cartas){
+    const tab = document.getElementById("tabuleiro");
+    tab.innerHTML = ""; // limpa
+    // garante 16 elementos
+    for(let r = 0; r < 16; r++){
+      const c = document.createElement("div");
+      c.className = "carta";
+      c.textContent = cartas[r] || " "; // fallback
+      c.setAttribute("role", "gridcell");
+      tab.appendChild(c);
+    }
+    // mostrar com animação
+    setTimeout(()=> tab.classList.add("show"), 10);
+  }
 
-            if (tabuleiroDiv.innerHTML.trim() !== "") {
-                // Se já houver um tabuleiro, pedir confirmação
-                if (confirm("Gerar um novo tabuleiro? Isso substituirá o atual.")) {
-                    gerarTabuleiro();
-                }
-            } else {
-                // Se não houver um tabuleiro ainda, gera diretamente
-                gerarTabuleiro();
-            }
-        });
-    </script>
+  // lógica do botão com confirmação se já existe um tabuleiro
+  const btn = document.getElementById("btnGerar");
+  const tabDiv = document.getElementById("tabuleiro");
 
+  function gerarSeConfirmado(){
+    if(tabDiv.innerHTML.trim() !== ""){
+      const confirmar = confirm("Gerar um novo tabuleiro? Isso substituirá o atual.");
+      if(!confirmar) return;
+    }
+    const baralho = criarBaralho();
+    const embaralhado = embaralhar(baralho);
+    renderizarGrid(embaralhado);
+  }
+
+  // evento do botão
+  btn.addEventListener("click", gerarSeConfirmado);
+
+  // se quiser gerar automaticamente ao abrir pela primeira vez, descomente:
+  // gerarSeConfirmado();
+</script>
 </body>
 </html>
